@@ -1,0 +1,17 @@
+[Unit]
+Description=Immich PostgreSQL with VectorChord
+
+[Container]
+Image={{ immich_postgres_image }}
+ContainerName=immich_postgres
+Pod=immich.pod
+EnvironmentFile=%h/.config/immich.env
+Secret=immich_db_password,type=env,target=POSTGRES_PASSWORD
+Volume=immich-pgdata.volume:/var/lib/postgresql/data
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

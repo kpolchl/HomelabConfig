@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloudflared tunnel
+
+[Container]
+Image={{ cloudflared_image }}
+ContainerName=cloudflared_server
+Pod=cloudflared.pod
+EnvironmentFile=%h/.config/cloudflared.env
+Secret=cloudflared_token,type=env,target=TUNNEL_TOKEN
+Exec=tunnel --no-autoupdate --metrics {{ cloudflared_metrics }} run
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

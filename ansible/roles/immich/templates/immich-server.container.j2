@@ -1,0 +1,20 @@
+[Unit]
+Description=Immich server
+Requires=immich-postgres.service immich-redis.service
+After=immich-postgres.service immich-redis.service
+
+[Container]
+Image=ghcr.io/immich-app/immich-server:{{ immich_version }}
+ContainerName=immich_server
+Pod=immich.pod
+EnvironmentFile=%h/.config/immich.env
+Secret=immich_db_password,type=env,target=DB_PASSWORD
+Volume={{ immich_data_dir }}:/data:Z
+Volume=/etc/localtime:/etc/localtime:ro
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

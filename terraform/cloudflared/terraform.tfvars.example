@@ -1,0 +1,20 @@
+cloudflare_zone       = "example.com"
+cloudflare_zone_id    = "REPLACE_WITH_ZONE_ID"
+cloudflare_account_id = "REPLACE_WITH_ACCOUNT_ID"
+cloudflare_email      = "you@example.com"
+
+# Name of the existing tunnel created by Ansible/cloudflared.
+cloudflare_tunnel_name = "homelab"
+
+# Optional
+# cloudflare_access_email_domain = "example.com"
+# cloudflare_access_emails       = ["you@example.com"]
+# cloudflare_access_enabled      = true
+# cloudflare_ssh_usernames       = ["root"]
+
+# GitHub identity provider (Zero Trust > Integrations > Identity providers).
+# cloudflare_github_idp_id = "REPLACE_WITH_GITHUB_IDP_ID"
+
+# Allow a GitHub organization (and optional team) through Access.
+# cloudflare_github_organization = "your-github-org"
+# cloudflare_github_team         = "optional-team"

@@ -1,0 +1,12 @@
+nextserwewusik_address: "{{ vault_nextserwewusik_address }}"
+firewalld_internal_sources: "{{ vault_firewalld_internal_sources }}"
+
+immich_db_password: "{{ vault_immich_db_password }}"
+
+wcs_studio_secret_key_base: "{{ vault_wcs_studio_secret_key_base }}"
+wcs_studio_resend_api_key: "{{ vault_wcs_studio_resend_api_key }}"
+wcs_studio_db_username: "{{ vault_wcs_studio_db_username }}"
+wcs_studio_db_password: "{{ vault_wcs_studio_db_password }}"
+wcs_studio_db_name: "{{ vault_wcs_studio_db_name }}"
+
+cloudflared_token: "{{ vault_cloudflared_token }}"

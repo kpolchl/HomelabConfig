@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT-0
+---
+wcs_studio_user: wcsstudio
+wcs_studio_version: v1.2.2
+wcs_studio_port: 4000
+wcs_studio_host: "{{ ansible_host }}"
+wcs_studio_data_dir: /srv/wcs_studio
+
+wcs_studio_db_username: postgres
+wcs_studio_db_name: wcs_studio_prod
+
+wcs_studio_postgres_image: docker.io/library/postgres:15-alpine

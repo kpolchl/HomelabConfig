@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------
+# Terraform
+# ---------------------------------------------------------------------------
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+crash.log
+crash.*.log
+
+# Local override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Local variable files (keep the committed example)
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# ---------------------------------------------------------------------------
+# Ansible
+# ---------------------------------------------------------------------------
+ansible/.vault_pass
+**/.vault_pass
+ansible/inventory/hosts.yml
+*.retry
+
+# ---------------------------------------------------------------------------
+# Secrets and credentials
+# ---------------------------------------------------------------------------
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.env
+.env
+.env.*
+
+# ---------------------------------------------------------------------------
+# Logs, caches, editors, OS files
+# ---------------------------------------------------------------------------
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

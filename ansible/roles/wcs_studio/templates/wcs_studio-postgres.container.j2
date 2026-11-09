@@ -1,0 +1,28 @@
+[Unit]
+Description=WcsStudio PostgreSQL
+
+[Container]
+Image={{ wcs_studio_postgres_image }}
+ContainerName=db
+Pod=wcs_studio.pod
+EnvironmentFile=%h/.config/wcs_studio.env
+Secret=wcs_studio_db_username,type=env,target=POSTGRES_USER
+Secret=wcs_studio_db_password,type=env,target=POSTGRES_PASSWORD
+Secret=wcs_studio_db_name,type=env,target=POSTGRES_DB
+Volume=wcs_studio-pgdata.volume:/var/lib/postgresql/data
+
+# Health check (maps from compose healthcheck)
+HealthCmd=pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+HealthInterval=5s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=10s
+# Critical: Sets the unit to "ready" only after health check passes
+Notify=healthy
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

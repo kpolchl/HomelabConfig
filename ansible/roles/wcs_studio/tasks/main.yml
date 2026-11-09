@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Create the wcs_studio user
+  ansible.builtin.user:
+    name: "{{ wcs_studio_user }}"
+    shell: /bin/bash
+    create_home: true
+    comment: WcsStudio rootless containers
+  register: wcs_studio_account
+
+- name: Confirm subordinate ID ranges were allocated
+  ansible.builtin.command: "grep -q '^{{ wcs_studio_user }}:' {{ item }}"
+  loop:
+    - /etc/subuid
+    - /etc/subgid
+  changed_when: false
+
+- name: Enable linger so the user's services start at boot
+  ansible.builtin.command: "loginctl enable-linger {{ wcs_studio_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ wcs_studio_user }}"
+
+- name: Wait for the user runtime directory
+  ansible.builtin.wait_for:
+    path: "/run/user/{{ wcs_studio_account.uid }}"
+    timeout: 30
+
+- name: Remember the environment user-scope systemd needs
+  ansible.builtin.set_fact:
+    wcs_studio_runtime_env:
+      XDG_RUNTIME_DIR: "/run/user/{{ wcs_studio_account.uid }}"
+      DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ wcs_studio_account.uid }}/bus"
+
+- name: Create the uploads directory
+  ansible.builtin.file:
+    path: "{{ wcs_studio_data_dir }}"
+    state: directory
+    owner: "{{ wcs_studio_user }}"
+    group: "{{ wcs_studio_user }}"
+    mode: "0750"
+
+- name: Create config directories, each owned by the user
+  ansible.builtin.file:
+    path: "{{ wcs_studio_account.home }}/{{ item }}"
+    state: directory
+    owner: "{{ wcs_studio_user }}"
+    group: "{{ wcs_studio_user }}"
+    mode: "0755"
+  loop:
+    - .config
+    - .config/containers
+    - .config/containers/systemd
+
+- name: Create the WcsStudio secrets as Podman secrets
+  containers.podman.podman_secret:
+    name: "{{ item.name }}"
+    data: "{{ item.data }}"
+    state: present
+    skip_existing: true
+  loop:
+    - name: wcs_studio_secret_key_base
+      data: "{{ wcs_studio_secret_key_base }}"
+    - name: wcs_studio_resend_api_key
+      data: "{{ wcs_studio_resend_api_key }}"
+    - name: wcs_studio_db_username
+      data: "{{ wcs_studio_db_username }}"
+    - name: wcs_studio_db_password
+      data: "{{ wcs_studio_db_password }}"
+    - name: wcs_studio_db_name
+      data: "{{ wcs_studio_db_name }}"
+    - name: wcs_studio_database_url
+      data: "ecto://{{ wcs_studio_db_username | urlencode | replace('/', '%2F') }}:{{ wcs_studio_db_password | urlencode | replace('/', '%2F') }}@127.0.0.1:5432/{{ wcs_studio_db_name }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+  become_user: "{{ wcs_studio_user }}"
+  environment: "{{ wcs_studio_runtime_env }}"
+  no_log: true
+
+- name: Render the WcsStudio environment file
+  ansible.builtin.template:
+    src: wcs_studio.env.j2
+    dest: "{{ wcs_studio_account.home }}/.config/wcs_studio.env"
+    owner: "{{ wcs_studio_user }}"
+    group: "{{ wcs_studio_user }}"
+    mode: "0640"
+  notify:
+    - Reload WcsStudio user systemd
+    - Restart WcsStudio
+
+- name: Render the Quadlet files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ wcs_studio_account.home }}/.config/containers/systemd/{{ item }}"
+    owner: "{{ wcs_studio_user }}"
+    group: "{{ wcs_studio_user }}"
+    mode: "0644"
+  loop:
+    - wcs_studio.pod
+    - wcs_studio-app_network.network
+    - wcs_studio-pgdata.volume
+    - wcs_studio-postgres.container
+    - wcs_studio-server.container
+  notify:
+    - Reload WcsStudio user systemd
+    - Restart WcsStudio
+
+- name: Apply pending handlers before starting services
+  ansible.builtin.meta: flush_handlers
+
+- name: Start the WcsStudio services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}.service"
+    scope: user
+    state: started
+  loop:
+    - wcs_studio-pod
+    - wcs_studio-postgres
+    - wcs_studio-server
+  become: true
+  become_user: "{{ wcs_studio_user }}"
+  environment: "{{ wcs_studio_runtime_env }}"
+  register: wcs_studio_start
+  retries: 5
+  delay: 5
+  until: wcs_studio_start is succeeded

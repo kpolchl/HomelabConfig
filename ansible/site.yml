@@ -1,0 +1,12 @@
+---
+- name: Homelab setup
+  hosts: servers
+  become: true
+  roles:
+    - common
+    - firewalld
+    - cockpit
+    - immich
+    - wcs_studio
+    - cloudflared
+    # - github-runner

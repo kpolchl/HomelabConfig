@@ -1,0 +1,10 @@
+[Unit]
+Description=WcsStudio pod
+
+[Pod]
+PodName=wcs_studio
+PublishPort={{ wcs_studio_port }}:4000
+Network=wcs_studio-app_network.network
+
+[Install]
+WantedBy=default.target

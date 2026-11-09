@@ -1,0 +1,9 @@
+[Unit]
+Description=Immich pod
+
+[Pod]
+PodName=immich
+PublishPort={{ immich_port }}:2283
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,9 @@
+- name: My first play
+  hosts: homelab
+  remote_user: root
+  tasks:
+    - name: Ping my hosts
+      ansible.builtin.ping:
+    - name: Print message
+      ansible.builtin.debug:
+        msg: Hello world

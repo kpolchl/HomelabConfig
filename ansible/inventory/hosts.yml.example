@@ -1,0 +1,10 @@
+---
+# Example inventory. Copy this file to hosts.yml and edit it.
+# hosts.yml is gitignored so real addresses are not published.
+all:
+  children:
+    servers:
+      hosts:
+        homelab:
+          ansible_host: "{{ nextserwewusik_address }}"
+          ansible_user: root

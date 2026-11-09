@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Install base packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: true
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+
+- name: Install dnf-automatic
+  ansible.builtin.dnf:
+    name: dnf-automatic
+    state: present

@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Enable and start firewalld
+  ansible.builtin.systemd_service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Log only unicast denied packets
+  ansible.builtin.lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: "^#?LogDenied="
+    line: "LogDenied={{ firewalld_log_denied }}"
+  notify: Reload firewalld
+
+- name: Move LAN sources out of any other zone
+  ansible.builtin.command: "firewall-cmd --permanent --zone=internal --change-source={{ item }}"
+  loop: "{{ firewalld_internal_sources }}"
+  register: change_src
+  changed_when: "'ALREADY_ENABLED' not in change_src.stderr"
+  notify: Reload firewalld
+
+# Open the LAN zone FIRST so you never remove access before replacing it
+- name: Add LAN sources to the internal zone
+  ansible.posix.firewalld:
+    zone: internal
+    source: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_internal_sources }}"
+
+- name: Enable services in the internal zone
+  ansible.posix.firewalld:
+    zone: internal
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_internal_services }}"
+
+- name: Open ports in the internal zone
+  ansible.posix.firewalld:
+    zone: internal
+    port: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_internal_ports }}"
+
+- name: Remove unwanted services from the internal zone
+  ansible.posix.firewalld:
+    zone: internal
+    service: "{{ item }}"
+    state: disabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_internal_removed_services }}"
+
+# Tighten the public zone
+- name: Enable services in the public zone
+  ansible.posix.firewalld:
+    zone: public
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_public_services }}"
+
+- name: Open ports in the public zone
+  ansible.posix.firewalld:
+    zone: public
+    port: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_public_ports }}"
+
+- name: Remove unwanted services from the public zone
+  ansible.posix.firewalld:
+    zone: public
+    service: "{{ item }}"
+    state: disabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewalld_public_removed_services }}"

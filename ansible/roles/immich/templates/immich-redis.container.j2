@@ -1,0 +1,14 @@
+[Unit]
+Description=Immich Valkey
+
+[Container]
+Image={{ immich_valkey_image }}
+ContainerName=immich_redis
+Pod=immich.pod
+HealthCmd=redis-cli ping
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

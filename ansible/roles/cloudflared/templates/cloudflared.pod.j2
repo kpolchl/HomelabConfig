@@ -1,0 +1,10 @@
+[Unit]
+Description=Cloudflared pod
+
+[Pod]
+PodName=cloudflared
+PublishPort={{ cloudflared_port }}:7844
+AddHost=host.containers.internal:host-gateway
+
+[Install]
+WantedBy=default.target

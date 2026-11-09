@@ -1,0 +1,17 @@
+- name: Basic configuration
+  hosts: all
+  become: true
+
+  tasks:
+      - name: Update system packages
+        ansible.builtin.dnf:
+            name: "*"
+            state: present
+
+      - name: Install useful packages
+        ansible.builtin.dnf:
+            name:
+                - nano
+                - htop
+                - curl
+            state: present

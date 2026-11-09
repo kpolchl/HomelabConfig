@@ -1,0 +1,22 @@
+[Unit]
+Description=WcsStudio server
+Requires=wcs_studio-postgres.service
+After=wcs_studio-postgres.service
+
+[Container]
+Image=ghcr.io/kpolchl/wcsstudio:{{ wcs_studio_version }}
+ContainerName=wcs_studio_server
+Pod=wcs_studio.pod
+EnvironmentFile=%h/.config/wcs_studio.env
+Secret=wcs_studio_secret_key_base,type=env,target=SECRET_KEY_BASE
+Secret=wcs_studio_resend_api_key,type=env,target=RESEND_API_KEY
+Secret=wcs_studio_database_url,type=env,target=DATABASE_URL
+Volume={{ wcs_studio_data_dir }}:/app/priv/static/uploads:Z
+Volume=/etc/localtime:/etc/localtime:ro
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

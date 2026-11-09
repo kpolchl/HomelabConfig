@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MIT-0
+---
+immich_user: immich
+immich_data_dir: /srv/immich
+immich_version: v3.3.0
+immich_port: 2283
+immich_timezone: Europe/Warsaw
+
+immich_db_username: postgres
+immich_db_name: immich
+
+immich_valkey_image: docker.io/valkey/valkey:9
+immich_postgres_image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0

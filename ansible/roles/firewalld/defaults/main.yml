@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT-0
+---
+firewalld_log_denied: unicast
+
+firewalld_internal_services: [ssh, http, https, mdns, cockpit]
+firewalld_internal_ports: [8123/tcp, 9091/tcp, 2283/tcp, 4000/tcp]
+firewalld_internal_removed_services: [dhcpv6-client, samba-client]
+
+# Everything else
+firewalld_public_services: []
+firewalld_public_ports: []
+firewalld_public_removed_services: [ssh, dhcpv6-client, cockpit]

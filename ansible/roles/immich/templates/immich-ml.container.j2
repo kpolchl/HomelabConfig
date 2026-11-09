@@ -1,0 +1,15 @@
+[Unit]
+Description=Immich machine learning
+
+[Container]
+Image=ghcr.io/immich-app/immich-machine-learning:{{ immich_version }}
+ContainerName=immich_machine_learning
+Pod=immich.pod
+Environment=TZ={{ immich_timezone }}
+Volume=immich-modelcache.volume:/cache
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

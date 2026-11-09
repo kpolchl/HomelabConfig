@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: MIT-0
+---
+cloudflared_user: cloudflared
+cloudflared_port: 7844
+cloudflared_image: docker.io/cloudflare/cloudflared:latest
+cloudflared_metrics: 0.0.0.0:7844

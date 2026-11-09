@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: MIT-0
+---
+
+- name: Create the immich user
+  ansible.builtin.user:
+    name: "{{ immich_user }}"
+    shell: /bin/bash
+    create_home: true
+    comment: Immich rootless containers
+  register: immich_account
+
+- name: Confirm subordinate ID ranges were allocated
+  ansible.builtin.command: "grep -q '^{{ immich_user }}:' {{ item }}"
+  loop:
+    - /etc/subuid
+    - /etc/subgid
+  changed_when: false
+
+- name: Enable linger so the user's services start at boot
+  ansible.builtin.command: "loginctl enable-linger {{ immich_user }}"
+  args:
+    creates: "/var/lib/systemd/linger/{{ immich_user }}"
+
+- name: Wait for the user runtime directory
+  ansible.builtin.wait_for:
+    path: "/run/user/{{ immich_account.uid }}"
+    timeout: 30
+
+- name: Remember the environment user-scope systemd needs
+  ansible.builtin.set_fact:
+    immich_runtime_env:
+      XDG_RUNTIME_DIR: "/run/user/{{ immich_account.uid }}"
+      DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ immich_account.uid }}/bus"
+
+- name: Create the photo library directory
+  ansible.builtin.file:
+    path: "{{ immich_data_dir }}"
+    state: directory
+    owner: "{{ immich_user }}"
+    group: "{{ immich_user }}"
+    mode: "0750"
+
+- name: Create config directories, each owned by the user
+  ansible.builtin.file:
+    path: "{{ immich_account.home }}/{{ item }}"
+    state: directory
+    owner: "{{ immich_user }}"
+    group: "{{ immich_user }}"
+    mode: "0755"
+  loop:
+    - .config
+    - .config/containers
+    - .config/containers/systemd
+
+- name: Render the Immich environment file
+  ansible.builtin.template:
+    src: immich.env.j2
+    dest: "{{ immich_account.home }}/.config/immich.env"
+    owner: "{{ immich_user }}"
+    group: "{{ immich_user }}"
+    mode: "0640"
+  notify:
+    - Reload Immich user systemd
+    - Restart Immich
+
+- name: Create the database password as a Podman secret
+  containers.podman.podman_secret:
+    name: immich_db_password
+    data: "{{ immich_db_password }}"
+    state: present
+    skip_existing: true
+  become: true
+  become_user: "{{ immich_user }}"
+  environment: "{{ immich_runtime_env }}"
+  no_log: true
+
+- name: Render the Quadlet files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ immich_account.home }}/.config/containers/systemd/{{ item }}"
+    owner: "{{ immich_user }}"
+    group: "{{ immich_user }}"
+    mode: "0644"
+  loop:
+    - immich.pod
+    - immich-pgdata.volume
+    - immich-modelcache.volume
+    - immich-redis.container
+    - immich-postgres.container
+    - immich-ml.container
+    - immich-server.container
+  notify:
+    - Reload Immich user systemd
+    - Restart Immich
+
+- name: Apply pending handlers before starting services
+  ansible.builtin.meta: flush_handlers
+
+- name: Start the Immich services
+  ansible.builtin.systemd_service:
+    name: "{{ item }}.service"
+    scope: user
+    state: started
+  loop:
+    - immich-redis
+    - immich-postgres
+    - immich-ml
+    - immich-server
+  become: true
+  become_user: "{{ immich_user }}"
+  environment: "{{ immich_runtime_env }}"
+  register: immich_start
+  retries: 5
+  delay: 5
+  until: immich_start is succeeded

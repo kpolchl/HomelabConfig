@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT-0
+---
+common_timezone: Europe/Warsaw
+common_packages: [curl, git, tmux, podman, cockpit, firewalld, pcp, python3-pcp]
